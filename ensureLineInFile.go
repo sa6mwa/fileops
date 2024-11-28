@@ -13,7 +13,7 @@ import (
 // matching unless matchWithLeadingAndTrailingSpaces is true. Will
 // treat after and before as prefix unless
 // matchFullStringNotJustPrefix. Returns error on failure.
-func EnsureLineInFile(textfile, line string, before, after *string, matchFullStringNotJustPrefix bool, matchWithLeadingAndTrailingSpaces bool) error {
+func EnsureLineInFile(textfile, line string, before, after *string, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces bool) error {
 	f, err := os.OpenFile(textfile, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return err
@@ -22,7 +22,7 @@ func EnsureLineInFile(textfile, line string, before, after *string, matchFullStr
 
 	var lines []string
 
-	// Read all lines from the file
+	// Read all lines from textfile
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
@@ -36,7 +36,7 @@ func EnsureLineInFile(textfile, line string, before, after *string, matchFullStr
 		return err
 	}
 
-	// Write lines back to the file
+	// Write lines back to textfile
 	if err := f.Truncate(0); err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func EnsureLineInFile(textfile, line string, before, after *string, matchFullStr
 // lines before matching unless matchWithLeadingAndTrailingSpaces is
 // true. Will treat after and before as prefix unless
 // matchFullStringNotJustPrefix. Returns error on failure.
-func EnsureLineInLines(lines *[]string, line string, before, after *string, matchFullStringNotJustPrefix bool, matchWithLeadingAndTrailingSpaces bool) error {
+func EnsureLineInLines(lines *[]string, line string, before, after *string, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces bool) error {
 	if lines == nil {
 		return errors.New("nil pointer")
 	}
@@ -68,7 +68,7 @@ func EnsureLineInLines(lines *[]string, line string, before, after *string, matc
 
 	// Function to find indices
 	findLine := func(target string) int {
-		for i, l := range *lines {
+		for i, l := range slice {
 			if matchWithLeadingAndTrailingSpaces {
 				if matchFullStringNotJustPrefix {
 					if l == target {

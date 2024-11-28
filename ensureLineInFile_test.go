@@ -83,7 +83,7 @@ func compareLines(t *testing.T, lines *[]string, expectedLines []string) {
 	}
 	for i := range expectedLines {
 		if (*lines)[i] != expectedLines[i] {
-			t.Errorf("Expected line %d to be %x, but got %x", i+1, expectedLines[i], (*lines)[i])
+			t.Errorf("Expected line %d to be %q, but got %q", i+1, expectedLines[i], (*lines)[i])
 		}
 	}
 }
