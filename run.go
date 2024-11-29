@@ -11,10 +11,17 @@ import (
 func Run(command string) error {
 	shell := `/bin/sh`
 	shellCommandOption := `-c`
+
+	if DryRun {
+		fmt.Fprintf(os.Stderr, "exec.Command(%q, %q, %q)\n", shell, shellCommandOption, command)
+		return nil
+	}
+
 	cmd := exec.Command(shell, shellCommandOption, command)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
 	err := cmd.Run()
 	if err != nil {
 		return fmt.Errorf("error running %q %q %q: %w", shell, shellCommandOption, command, err)

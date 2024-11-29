@@ -22,19 +22,32 @@ func PutFile(destination, content string, filePerm os.FileMode, dirPerm ...os.Fi
 	// Get the directory path from the destination
 	dirPath := filepath.Dir(destination)
 
-	// Create directories if they do not exist
-	err := os.MkdirAll(dirPath, directoryPermission)
-	if err != nil {
-		return fmt.Errorf("failed to create directories: %w", err)
+	if DryRun {
+		fmt.Fprintf(os.Stderr, "os.MkdirAll(%q, %v)\n", dirPath, directoryPermission)
+	} else {
+		// Create directories if they do not exist
+		err := os.MkdirAll(dirPath, directoryPermission)
+		if err != nil {
+			return fmt.Errorf("failed to create directories: %w", err)
+		}
 	}
 
-	// Write the file
-	err = os.WriteFile(destination, []byte(content), filePerm)
-	if err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
+	if DryRun {
+		fmt.Fprintf(os.Stderr, "os.WriteFile(%q, %q, %v)\n", destination, content, filePerm)
+	} else {
+		// Write the file
+		if err := os.WriteFile(destination, []byte(content), filePerm); err != nil {
+			return fmt.Errorf("failed to write file: %w", err)
+		}
 	}
 
-	return os.Chmod(destination, filePerm)
+	if DryRun {
+		fmt.Fprintf(os.Stderr, "os.Chmod(%q, %v)\n", destination, filePerm)
+	} else {
+		os.Chmod(destination, filePerm)
+	}
+
+	return nil
 }
 
 // PutFileFromFS copies a file or recursively copies a directory from
@@ -54,10 +67,18 @@ func PutFileFromFS(fsys fs.FS, source string, destination string, filePerm os.Fi
 
 	// Handle directories recursively.
 	if srcInfo.IsDir() {
+		if DryRun {
+			fmt.Fprintf(os.Stderr, "copyDir(fsys, %q, %q, %v, %v)\n", source, destination, filePerm, directoryPermission)
+			return nil
+		}
 		return copyDir(fsys, source, destination, filePerm, directoryPermission)
 	}
 
 	// Handle single file copy.
+	if DryRun {
+		fmt.Fprintf(os.Stderr, "copyFile(fsys, %q, %q, %v, %v)\n", source, destination, filePerm, directoryPermission)
+		return nil
+	}
 	return copyFile(fsys, source, destination, filePerm, directoryPermission)
 }
 

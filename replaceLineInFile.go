@@ -3,6 +3,7 @@ package fileops
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -25,10 +26,19 @@ func ReplaceLineInFile(textfile, lineToReplace, replaceWithLine string, n int, m
 		return err
 	}
 
+	if DryRun {
+		fmt.Fprintf(os.Stderr, "ReplaceLineInFile(%q, %q, %q, %d, %t, %t)\n", textfile, lineToReplace, replaceWithLine, n, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces)
+	}
+
 	// Replace lineToReplace with replaceWithLine in lines slice, liens
 	// slice will be modified
 	if err := ReplaceLineInLines(&lines, lineToReplace, replaceWithLine, n, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces); err != nil {
 		return err
+	}
+
+	if DryRun {
+		fmt.Fprintln(os.Stderr, strings.Join(lines, "\n"))
+		return nil
 	}
 
 	// Write lines back to textfile

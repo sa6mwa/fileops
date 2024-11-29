@@ -3,6 +3,7 @@ package fileops
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -31,9 +32,18 @@ func EnsureLineInFile(textfile, line string, before, after *string, matchFullStr
 		return err
 	}
 
+	if DryRun {
+		fmt.Fprintf(os.Stderr, "EnsureLineInFile(%q, %q, %v, %v, %t, %t)\n", textfile, line, before, after, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces)
+	}
+
 	// Ensure line is in lines slice, lines slice will be modified
 	if err := EnsureLineInLines(&lines, line, before, after, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces); err != nil {
 		return err
+	}
+
+	if DryRun {
+		fmt.Fprintln(os.Stderr, strings.Join(lines, "\n"))
+		return nil
 	}
 
 	// Write lines back to textfile
