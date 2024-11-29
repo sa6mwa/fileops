@@ -12,6 +12,8 @@ func Run(command string) error {
 	shell := `/bin/sh`
 	shellCommandOption := `-c`
 
+	fmt.Fprintf(os.Stderr, "RUN %q\n", command)
+
 	if DryRun {
 		fmt.Fprintf(os.Stderr, "exec.Command(%q, %q, %q)\n", shell, shellCommandOption, command)
 		return nil
