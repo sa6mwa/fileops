@@ -5,7 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"strings"
+
+	"github.com/hexops/gotextdiff"
+	"github.com/hexops/gotextdiff/myers"
+	"github.com/hexops/gotextdiff/span"
 )
 
 // EnsureLineInFile ensures line is in textfile, optionally before
@@ -13,19 +18,31 @@ import (
 // leading and trailing spaces from line read from textfile before
 // matching unless matchWithLeadingAndTrailingSpaces is true. Will
 // treat after and before as prefix unless
-// matchFullStringNotJustPrefix. Returns error on failure.
-func EnsureLineInFile(textfile, line string, before, after *string, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces bool) error {
-	f, err := os.OpenFile(textfile, os.O_RDWR|os.O_CREATE, 0644)
+// matchFullStringNotJustPrefix. If optional filePerm is specified,
+// the first item in the slice is used as file mode if textfile does
+// not exist. Returns error on failure.
+func EnsureLineInFile(textfile, line string, before, after *string, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces bool, filePerm ...os.FileMode) error {
+	var fileMode os.FileMode = 0644
+	if len(filePerm) > 0 {
+		fileMode = filePerm[0]
+	}
+	f, err := os.OpenFile(textfile, os.O_RDWR|os.O_CREATE, fileMode)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
 	var lines []string
+	var originalLines []string
 
 	// Read all lines from textfile
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
+		// If after and before is nil, avoid re-writing the file if the
+		// exact line already exists in the file.
+		if before == nil && after == nil && scanner.Text() == line {
+			return nil
+		}
 		lines = append(lines, scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
@@ -33,6 +50,8 @@ func EnsureLineInFile(textfile, line string, before, after *string, matchFullStr
 	}
 
 	if DryRun {
+		originalLines = make([]string, len(lines))
+		copy(originalLines, lines)
 		fmt.Fprintf(os.Stderr, "EnsureLineInFile(%q, %q, %v, %v, %t, %t)\n", textfile, line, before, after, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces)
 	}
 
@@ -42,7 +61,11 @@ func EnsureLineInFile(textfile, line string, before, after *string, matchFullStr
 	}
 
 	if DryRun {
-		fmt.Fprintln(os.Stderr, strings.Join(lines, "\n"))
+		// Show diff
+		origStrings := strings.Join(originalLines, "\n")
+		edits := myers.ComputeEdits(span.URIFromPath(path.Join("a", textfile)), origStrings, strings.Join(lines, "\n"))
+		diff := fmt.Sprint(gotextdiff.ToUnified(path.Join("a", textfile), path.Join("b", textfile), origStrings, edits))
+		fmt.Fprintln(os.Stderr, diff)
 		return nil
 	}
 

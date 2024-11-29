@@ -5,7 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"strings"
+
+	"github.com/hexops/gotextdiff"
+	"github.com/hexops/gotextdiff/myers"
+	"github.com/hexops/gotextdiff/span"
 )
 
 func ReplaceLineInFile(textfile, lineToReplace, replaceWithLine string, n int, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces bool) error {
@@ -16,6 +21,7 @@ func ReplaceLineInFile(textfile, lineToReplace, replaceWithLine string, n int, m
 	defer f.Close()
 
 	var lines []string
+	var originalLines []string
 
 	// Read all lines from textfile
 	scanner := bufio.NewScanner(f)
@@ -27,6 +33,8 @@ func ReplaceLineInFile(textfile, lineToReplace, replaceWithLine string, n int, m
 	}
 
 	if DryRun {
+		originalLines = make([]string, len(lines))
+		copy(originalLines, lines)
 		fmt.Fprintf(os.Stderr, "ReplaceLineInFile(%q, %q, %q, %d, %t, %t)\n", textfile, lineToReplace, replaceWithLine, n, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces)
 	}
 
@@ -37,7 +45,11 @@ func ReplaceLineInFile(textfile, lineToReplace, replaceWithLine string, n int, m
 	}
 
 	if DryRun {
-		fmt.Fprintln(os.Stderr, strings.Join(lines, "\n"))
+		// Show diff
+		origStrings := strings.Join(originalLines, "\n")
+		edits := myers.ComputeEdits(span.URIFromPath(path.Join("a", textfile)), origStrings, strings.Join(lines, "\n"))
+		diff := fmt.Sprint(gotextdiff.ToUnified(path.Join("a", textfile), path.Join("b", textfile), origStrings, edits))
+		fmt.Fprintln(os.Stderr, diff)
 		return nil
 	}
 

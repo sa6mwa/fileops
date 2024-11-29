@@ -1,5 +1,6 @@
 // fileops is a Go package for various file operations, especially
-// related to configuration files and command line operations.
+// related to configuration files, command line operations, and
+// configuration management.
 package fileops
 
 // Package wide global variable instructing functions whether to
