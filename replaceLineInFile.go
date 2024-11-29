@@ -16,7 +16,7 @@ import (
 func ReplaceLineInFile(textfile, lineToReplace, replaceWithLine string, n int, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces bool) error {
 	f, err := os.OpenFile(textfile, os.O_RDWR, 0644)
 	if err != nil {
-		return err
+		return orExit(err)
 	}
 	defer f.Close()
 
@@ -29,7 +29,7 @@ func ReplaceLineInFile(textfile, lineToReplace, replaceWithLine string, n int, m
 		lines = append(lines, scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
-		return err
+		return orExit(err)
 	}
 
 	if DryRun {
@@ -41,7 +41,7 @@ func ReplaceLineInFile(textfile, lineToReplace, replaceWithLine string, n int, m
 	// Replace lineToReplace with replaceWithLine in lines slice, liens
 	// slice will be modified
 	if err := ReplaceLineInLines(&lines, lineToReplace, replaceWithLine, n, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces); err != nil {
-		return err
+		return orExit(err)
 	}
 
 	if DryRun {
@@ -55,23 +55,23 @@ func ReplaceLineInFile(textfile, lineToReplace, replaceWithLine string, n int, m
 
 	// Write lines back to textfile
 	if err := f.Truncate(0); err != nil {
-		return err
+		return orExit(err)
 	}
 	if _, err := f.Seek(0, 0); err != nil {
-		return err
+		return orExit(err)
 	}
 	writer := bufio.NewWriter(f)
 	for _, line := range lines {
 		if _, err := writer.WriteString(line + "\n"); err != nil {
-			return err
+			return orExit(err)
 		}
 	}
-	return writer.Flush()
+	return orExit(writer.Flush())
 }
 
 func ReplaceLineInLines(lines *[]string, lineToReplace string, replaceWithLine string, n int, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces bool) error {
 	if lines == nil {
-		return errors.New("nil pointer")
+		return orExit(errors.New("nil pointer"))
 	}
 
 	// Deref lines pointer

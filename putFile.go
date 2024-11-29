@@ -28,7 +28,7 @@ func PutFile(destination, content string, filePerm os.FileMode, dirPerm ...os.Fi
 		// Create directories if they do not exist
 		err := os.MkdirAll(dirPath, directoryPermission)
 		if err != nil {
-			return fmt.Errorf("failed to create directories: %w", err)
+			return orExit(fmt.Errorf("failed to create directories: %w", err))
 		}
 	}
 
@@ -37,7 +37,7 @@ func PutFile(destination, content string, filePerm os.FileMode, dirPerm ...os.Fi
 	} else {
 		// Write the file
 		if err := os.WriteFile(destination, []byte(content), filePerm); err != nil {
-			return fmt.Errorf("failed to write file: %w", err)
+			return orExit(fmt.Errorf("failed to write file: %w", err))
 		}
 	}
 
@@ -62,7 +62,7 @@ func PutFileFromFS(fsys fs.FS, source string, destination string, filePerm os.Fi
 	// Get the file information from the source path.
 	srcInfo, err := fs.Stat(fsys, source)
 	if err != nil {
-		return fmt.Errorf("failed to stat source path: %w", err)
+		return orExit(fmt.Errorf("failed to stat source path: %w", err))
 	}
 
 	// Handle directories recursively.
@@ -71,7 +71,7 @@ func PutFileFromFS(fsys fs.FS, source string, destination string, filePerm os.Fi
 			fmt.Fprintf(os.Stderr, "copyDir(fsys, %q, %q, %v, %v)\n", source, destination, filePerm, directoryPermission)
 			return nil
 		}
-		return copyDir(fsys, source, destination, filePerm, directoryPermission)
+		return orExit(copyDir(fsys, source, destination, filePerm, directoryPermission))
 	}
 
 	// Handle single file copy.
@@ -79,36 +79,36 @@ func PutFileFromFS(fsys fs.FS, source string, destination string, filePerm os.Fi
 		fmt.Fprintf(os.Stderr, "copyFile(fsys, %q, %q, %v, %v)\n", source, destination, filePerm, directoryPermission)
 		return nil
 	}
-	return copyFile(fsys, source, destination, filePerm, directoryPermission)
+	return orExit(copyFile(fsys, source, destination, filePerm, directoryPermission))
 }
 
 // copyDir recursively copies a directory and its contents.
 func copyDir(fsys fs.FS, srcDir string, destDir string, filePerm os.FileMode, dirPerm os.FileMode) error {
 	err := fs.WalkDir(fsys, srcDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return fmt.Errorf("failed to walk directory: %w", err)
+			return orExit(fmt.Errorf("failed to walk directory: %w", err))
 		}
 
 		// Compute the relative path and destination path.
 		relPath, err := filepath.Rel(srcDir, path)
 		if err != nil {
-			return fmt.Errorf("failed to compute relative path: %w", err)
+			return orExit(fmt.Errorf("failed to compute relative path: %w", err))
 		}
 		destPath := filepath.Join(destDir, relPath)
 
 		// Handle directories.
 		if d.IsDir() {
 			if err := os.MkdirAll(destPath, dirPerm); err != nil {
-				return fmt.Errorf("failed to create directory: %w", err)
+				return orExit(fmt.Errorf("failed to create directory: %w", err))
 			}
 			return nil
 		}
 
 		// Handle files.
-		return copyFile(fsys, path, destPath, filePerm, dirPerm)
+		return orExit(copyFile(fsys, path, destPath, filePerm, dirPerm))
 	})
 
-	return err
+	return orExit(err)
 }
 
 // copyFile copies a single file from fs.FS to the local filesystem.
@@ -116,28 +116,28 @@ func copyFile(fsys fs.FS, srcFile string, destFile string, filePerm os.FileMode,
 	// Open the source file.
 	src, err := fsys.Open(srcFile)
 	if err != nil {
-		return fmt.Errorf("failed to open source file: %w", err)
+		return orExit(fmt.Errorf("failed to open source file: %w", err))
 	}
 	defer src.Close()
 
 	// Create the destination file's directory.
 	destDir := filepath.Dir(destFile)
 	if err := os.MkdirAll(destDir, dirPerm); err != nil {
-		return fmt.Errorf("failed to create destination directory: %w", err)
+		return orExit(fmt.Errorf("failed to create destination directory: %w", err))
 	}
 
 	// Create the destination file.
 	dest, err := os.OpenFile(destFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePerm)
 	//dest, err := os.Create(destFile)
 	if err != nil {
-		return fmt.Errorf("failed to create destination file: %w", err)
+		return orExit(fmt.Errorf("failed to create destination file: %w", err))
 	}
 	defer dest.Close()
 
 	// Copy the file content.
 	_, err = io.Copy(dest, src)
 	if err != nil {
-		return fmt.Errorf("failed to copy file content: %w", err)
+		return orExit(fmt.Errorf("failed to copy file content: %w", err))
 	}
 
 	return nil

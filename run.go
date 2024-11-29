@@ -24,7 +24,7 @@ func Run(command string) error {
 
 	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("error running %q %q %q: %w", shell, shellCommandOption, command, err)
+		return orExit(fmt.Errorf("error running %q %q %q: %w", shell, shellCommandOption, command, err))
 	}
 	return nil
 }

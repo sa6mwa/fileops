@@ -3,9 +3,19 @@
 // configuration management.
 package fileops
 
-// Package wide global variable instructing functions whether to
-// actually write to files or run commands.
+import (
+	"fmt"
+	"os"
+)
+
+// Package wide variable instructing functions whether to actually
+// write to files or run commands.
 var DryRun bool = false
+
+// Package wide variable instructing functions to call os.Exit(1) on
+// error instead of return err. The error message will be printed to
+// os.Stdout before terminating.
+var ExitOnError bool = false
 
 // SetDryRun can be used to toggle package-wide dry-run-mode on or
 // off. If state is true, no files or content will be
@@ -13,4 +23,18 @@ var DryRun bool = false
 // verbose output will be printed to stderr.
 func SetDryRun(state bool) {
 	DryRun = state
+}
+
+// SetExitOnError can be used to set whether functions should exit on
+// error instead of return err. See ExitOnError variable.
+func SetExitOnError(state bool) {
+	ExitOnError = state
+}
+
+func orExit(err error) error {
+	if ExitOnError && err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: %v", err)
+		os.Exit(1)
+	}
+	return err
 }

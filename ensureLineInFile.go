@@ -28,7 +28,7 @@ func EnsureLineInFile(textfile, line string, before, after *string, matchFullStr
 	}
 	f, err := os.OpenFile(textfile, os.O_RDWR|os.O_CREATE, fileMode)
 	if err != nil {
-		return err
+		return orExit(err)
 	}
 	defer f.Close()
 
@@ -46,7 +46,7 @@ func EnsureLineInFile(textfile, line string, before, after *string, matchFullStr
 		lines = append(lines, scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
-		return err
+		return orExit(err)
 	}
 
 	if DryRun {
@@ -57,7 +57,7 @@ func EnsureLineInFile(textfile, line string, before, after *string, matchFullStr
 
 	// Ensure line is in lines slice, lines slice will be modified
 	if err := EnsureLineInLines(&lines, line, before, after, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces); err != nil {
-		return err
+		return orExit(err)
 	}
 
 	if DryRun {
@@ -71,18 +71,18 @@ func EnsureLineInFile(textfile, line string, before, after *string, matchFullStr
 
 	// Write lines back to textfile
 	if err := f.Truncate(0); err != nil {
-		return err
+		return orExit(err)
 	}
 	if _, err := f.Seek(0, 0); err != nil {
-		return err
+		return orExit(err)
 	}
 	writer := bufio.NewWriter(f)
 	for _, line := range lines {
 		if _, err := writer.WriteString(line + "\n"); err != nil {
-			return err
+			return orExit(err)
 		}
 	}
-	return writer.Flush()
+	return orExit(writer.Flush())
 }
 
 // EnsureLineInLines ensures line is in lines string pointer slice,
@@ -93,7 +93,7 @@ func EnsureLineInFile(textfile, line string, before, after *string, matchFullStr
 // matchFullStringNotJustPrefix. Returns error on failure.
 func EnsureLineInLines(lines *[]string, line string, before, after *string, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces bool) error {
 	if lines == nil {
-		return errors.New("nil pointer")
+		return orExit(errors.New("nil pointer"))
 	}
 
 	// Deref lines pointer
