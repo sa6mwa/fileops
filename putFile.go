@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // PutFile writes content into local file destination with mode
@@ -21,6 +22,16 @@ func PutFile(destination, content string, filePerm os.FileMode, dirPerm ...os.Fi
 
 	// Get the directory path from the destination
 	dirPath := filepath.Dir(destination)
+
+	// Make sure content ends with a new line
+	newline := "\n"
+	if os.PathSeparator == '\\' {
+		// Windows
+		newline = "\r\n"
+	}
+	if !strings.HasSuffix(content, newline) {
+		content += newline
+	}
 
 	if DryRun {
 		fmt.Fprintf(os.Stderr, "os.MkdirAll(%q, %v)\n", dirPath, directoryPermission)
