@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"syscall"
 
 	"al.essio.dev/pkg/shellescape"
 )
@@ -28,6 +29,11 @@ func Run(command string) error {
 	if err != nil {
 		return orExit(fmt.Errorf("error running %q %q %q: %w", shell, shellCommandOption, command, err))
 	}
+
+	// Attempt to resolve possible race condition by syncing before
+	// exiting.
+	syscall.Sync()
+
 	return nil
 }
 
