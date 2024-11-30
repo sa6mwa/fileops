@@ -65,6 +65,14 @@ func PutFile(destination, content string, filePerm os.FileMode, dirPerm ...os.Fi
 // an fs.FS interface to a target path on the local
 // filesystem. Returns error in case of failure.
 func PutFileFromFS(fsys fs.FS, source string, destination string, filePerm os.FileMode, dirPerm ...os.FileMode) error {
+	if DryRun {
+		if len(dirPerm) > 0 {
+			fmt.Fprintf(os.Stderr, "PutFileFromFS(<fs>, %q, %q, %v, %v)\n", source, destination, filePerm, dirPerm[0])
+		} else {
+			fmt.Fprintf(os.Stderr, "PutFileFromFS(<fs>, %q, %q, %v)\n", source, destination, filePerm)
+		}
+	}
+
 	var directoryPermission os.FileMode = 0755
 	if len(dirPerm) > 0 {
 		directoryPermission = dirPerm[0]

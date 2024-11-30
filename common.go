@@ -33,7 +33,7 @@ func SetExitOnError(state bool) {
 
 func orExit(err error) error {
 	if ExitOnError && err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: %v", err)
+		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
 		os.Exit(1)
 	}
 	return err
