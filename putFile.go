@@ -163,7 +163,9 @@ func copyFile(fsys fs.FS, srcFile string, destFile string, filePerm os.FileMode,
 }
 
 // ListFiles recursively lists all files in the given fs.FS starting
-// from the root directory.
+// from the root directory. If fsys is an embed.FS, be sure to use
+// root `.` and not `/`. Returns a string slice of paths to
+// non-directory items (files) or error is something failed.
 func ListFiles(fsys fs.FS, root string) ([]string, error) {
 	if DryRun {
 		fmt.Fprintf(os.Stderr, "ListFiles(<fs>, %q)\n", root)
