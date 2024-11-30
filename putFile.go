@@ -71,6 +71,7 @@ func PutFileFromFS(fsys fs.FS, source string, destination string, filePerm os.Fi
 		} else {
 			fmt.Fprintf(os.Stderr, "PutFileFromFS(<fs>, %q, %q, %v)\n", source, destination, filePerm)
 		}
+
 	}
 
 	var directoryPermission os.FileMode = 0755
@@ -159,4 +160,26 @@ func copyFile(fsys fs.FS, srcFile string, destFile string, filePerm os.FileMode,
 	}
 
 	return nil
+}
+
+// ListFiles recursively lists all files in the given fs.FS starting
+// from the root directory.
+func ListFiles(fsys fs.FS, root string) ([]string, error) {
+	if DryRun {
+		fmt.Fprintf(os.Stderr, "ListFiles(<fs>, %q)\n", root)
+	}
+	var files []string
+	err := fs.WalkDir(fsys, root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			files = append(files, path) // Collect the file path
+			if DryRun {
+				fmt.Fprintln(os.Stderr, path)
+			}
+		}
+		return nil
+	})
+	return files, err
 }
