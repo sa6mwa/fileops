@@ -88,6 +88,8 @@ func RemoveLineFromFile(textfile, line string, n int, before, after *string, mat
 		return nil
 	}
 
+	lines = filteredLines
+
 	if DryRun {
 		// Show diff
 		origStrings := strings.Join(originalLines, "\n")
