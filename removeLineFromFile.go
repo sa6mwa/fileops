@@ -18,7 +18,7 @@ import (
 // after/before string respectively. If both before and after are nil,
 // line is removed from anywhere in the file.
 func RemoveLineFromFile(textfile, line string, n int, before, after *string, matchFullStringNotJustPrefix, matchWithLeadingAndTrailingSpaces bool) error {
-	f, err := os.Open(textfile)
+	f, err := os.OpenFile(textfile, os.O_RDWR, 0644)
 	if err != nil {
 		return orExit(err)
 	}
