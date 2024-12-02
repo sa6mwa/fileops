@@ -67,6 +67,7 @@ func PutFileIfNotExists(destination, content string, filePerm os.FileMode, dirPe
 	if !Exists(destination) {
 		return PutFile(destination, content, filePerm, dirPerm...)
 	}
+	fmt.Fprintf(os.Stderr, "PutFileIfNotExists: %q already exists, skipping.\n", destination)
 	return nil
 }
 
