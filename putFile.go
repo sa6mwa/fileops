@@ -61,6 +61,15 @@ func PutFile(destination, content string, filePerm os.FileMode, dirPerm ...os.Fi
 	return nil
 }
 
+// PutFileIfNotExists does not overwrite destination file if it
+// already exists, otherwise it does and returns what PutFile does.
+func PutFileIfNotExists(destination, content string, filePerm os.FileMode, dirPerm ...os.FileMode) error {
+	if !Exists(destination) {
+		return PutFile(destination, content, filePerm, dirPerm...)
+	}
+	return nil
+}
+
 // PutFileFromFS copies a file or recursively copies a directory from
 // an fs.FS interface to a target path on the local
 // filesystem. Returns error in case of failure.
