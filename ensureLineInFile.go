@@ -26,11 +26,23 @@ func EnsureLineInFile(textfile, line string, before, after *string, matchFullStr
 	if len(filePerm) > 0 {
 		fileMode = filePerm[0]
 	}
-	f, err := os.OpenFile(textfile, os.O_RDWR|os.O_CREATE, fileMode)
-	if err != nil {
-		return orExit(err)
+
+	var f *os.File
+	var err error
+	if DryRun {
+		f, err = os.CreateTemp("", "dry-run-")
+		if err != nil {
+			return orExit(err)
+		}
+		defer os.Remove(f.Name())
+		defer f.Close()
+	} else {
+		f, err = os.OpenFile(textfile, os.O_RDWR|os.O_CREATE, fileMode)
+		if err != nil {
+			return orExit(err)
+		}
+		defer f.Close()
 	}
-	defer f.Close()
 
 	var lines []string
 	var originalLines []string
